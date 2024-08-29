@@ -109,6 +109,7 @@ domains=(
   list.quorum.to
   mail-abuse.blacklist.jippg.org
   mtawlrev.dnsbl.rediris.es
+  multi.surbl.org
   netbl.spameatingmonkey.net
   netblock.pedantic.org
   netscan.rbl.blockedservers.com
