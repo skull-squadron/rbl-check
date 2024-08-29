@@ -132,10 +132,10 @@ for IP in ${IP_LIST[*]}; do
   #/////////////////////////////////////////////////////
   for domain in ${domains[*]}; do
       echo -en "\e[32m \e[1mChecking IP $IP in RBL ${domain}...              \e[0m\r"
-      ipcheck=$(dig +short "$revv.${domain}")
+      ipcheck=($(dig +short "$revv.${domain}"))
       status=0
       if [[ -n "$ipcheck" ]]; then
-          echo -e "\e[1m\e[31mIP $IP is Blacklisted in ${domain} \e[0m" status code "$ipcheck"
+          echo -e "\e[1m\e[31mIP $IP is Blacklisted in ${domain} \e[0m" status code "${ipcheck[*]}"
           status+=1
       fi
   done
