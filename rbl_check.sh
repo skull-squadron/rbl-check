@@ -196,11 +196,13 @@ if [[ -t 1 && "$COLOR" != none ]] || [ "$COLOR" = always ]; then
   RED='\e[31;1m'
   GREEN='\e[32;1m'
   YELLOW='\e[33;1m'
+  BLUE='\e[34;1m'
   RESET='\e[0m'
 else
   RED=
   GREEN=
   YELLOW=
+  BLUE=
   RESET=
 fi
 
@@ -238,9 +240,13 @@ check_ip() {
   for RBL_DOMAIN in "${RBL_DOMAINS[@]}"; do
     echo -en "${YELLOW}Checking IP $IP in RBL $RBL_DOMAIN ...$RESET                                    \r"
     OUTPUT=($(dig +short "$(tac -s. <<< "$IP.")${RBL_DOMAIN}"))
-    if [[ -n "${OUTPUT[*]}" && ! "${OUTPUT[*]}" ~= *connection timed out* ]]; then
-      echo -e "${RED}IP $IP is blacklisted in RBL $RBL_DOMAIN $RESET status code ${OUTPUT[*]}"
-      STATUS+=1
+    if [ -n "${OUTPUT[*]}" ]; then
+      if [[ "${OUTPUT[*]}" =~ *'connection timed out'* ]]; then
+        echo -e "${BLUE}$RBL_DOMAIN cannot be reached $RESET status code ${OUTPUT[*]}"
+      else
+        echo -e "${RED}IP $IP is blacklisted in RBL $RBL_DOMAIN $RESET status code ${OUTPUT[*]}"
+        STATUS+=1
+      fi
     fi
   done
   if [ "$STATUS" = 0 ]; then
