@@ -14,6 +14,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+VERSION='1.0.1'
+NAMESERVER='8.8.8.8'
+IP_LIST=()
+COLOR=auto
 RBL_DOMAINS=(
   bl.mav.com.br
   rbl2.triumf.ca
@@ -171,34 +175,31 @@ RBL_DOMAINS=(
   torexit.dan.me.uk
 )
 
-VERSION='1.0.1'
-IP_LIST=()
 
-if [[ -t 1 && "$COLOR" != none ]] || [ "$COLOR" = always ]; then
-  RED='\e[31;1m'
-  GREEN='\e[32;1m'
-  YELLOW='\e[33;1m'
-  BLUE='\e[34;1m'
-  RESET='\e[0m'
-else
-  RED=
-  GREEN=
-  YELLOW=
-  BLUE=
-  RESET=
-fi
+###############################################@##@#### functions ####@@########################################################
 
 help() {
   cat <<HELP
-Usage: $(basename "$0") [OPTION]...
+Usage: $(basename "$0") {-i IP | -f FILE}... [OPTION]...
+
+Required arguments (one or more of the following)
+  -i IP      check IP in blacklists
+  -f FILE    use file as list to check, one IP per line
 
 Options
-  -i IP      check IP in blacklists
-  -f FILE    use file as list of IPs to check
-  -v         print version
+  -c         always print using ANSI terminal colors
+  -C         never print using ANSI terminal colors
   -h         print this help
+  -n NS      use NS as resolver
+  -N         use system resolver
+  -v         print version
   
 HELP
+  exit 1
+}
+
+die() {
+  echo >&2 "Error: $@"
   exit 1
 }
 
@@ -209,19 +210,16 @@ assert_valid_ip4_address() {
   set -- $1
   for N in "$1" "$2" "$3" "$4"; do
     if [[ "$N" -lt 0 || "$N" -gt 255 ]]; then
-      echo >&2 "$IP is not an valid IPv4 adddress"
-      exit 1
+      die "$IP is not an valid IPv4 adddress"
     fi
   done
 }
 
 check_ip() {
-  local IP=$1
-  local STATUS=0
-  local RBL_DOMAIN OUTPUT
+  local IP=$1 STATUS=0 RBL_DOMAIN OUTPUT
   for RBL_DOMAIN in "${RBL_DOMAINS[@]}"; do
     echo -en "${YELLOW}Checking IP $IP in RBL $RBL_DOMAIN ...$RESET                                    \r"
-    OUTPUT=($(dig +short "$(tac -s. <<< "$IP.")${RBL_DOMAIN}"))
+    OUTPUT=($(dig ${NAMESERVER:+@}${NAMESERVER} +short "$(tac -s. <<< "$IP.")${RBL_DOMAIN}"))
     if [ -n "${OUTPUT[*]}" ]; then
       if [[ "${OUTPUT[*]}" =~ 'connection timed out' ]]; then
         echo -e "${BLUE}$RBL_DOMAIN cannot be reached $RESET status code ${OUTPUT[*]}"
@@ -238,39 +236,93 @@ check_ip() {
   fi
 }
 
-[ -z "$1" ] && help
-while getopts :i:f:v FLAG; do
-  case "$FLAG" in
-    i)
-      OPTERR=0
-      assert_valid_ip4_address "$OPTARG"
-      IP_LIST+=("$OPTARG")
-      ;;
-    f)
-      if [ ! -r "$OPTARG" ]; then
-        echo "Error: $OPTARG file not found or unreadable"
-        exit 1
-      fi
-      while read -r IP; do
-        assert_valid_ip4_address "$IP"
-        IP_LIST+=("$IP")
-      done < "$OPTARG"
-      ;;
-    v)
-      printf '%s\n' "$VERSION"
-      ;;
-    \?)
-      help
-      ;;
-    :)
-      echo "Error: -$OPTARG requires an argument."
-      help
-      ;;
-  esac
-done
+parse_args() {
+  [ -z "$1" ] && help
 
-# ip check again rbl..
-for IP in "${IP_LIST[@]}"; do
-  check_ip "$IP"
-done
+  local FLAG OPTARG OPTERR IP COLOR_SET= NS_SET=
+  
+  while getopts cC:i:nN:f:v FLAG; do
+    case "$FLAG" in
+      i)
+        OPTERR=0
+        assert_valid_ip4_address "$OPTARG"
+        IP_LIST+=("$OPTARG")
+        ;;
+      f)
+        [ -r "$OPTARG" ] || die "$OPTARG file not found or unreadable"
+        while read -r IP; do
+          assert_valid_ip4_address "$IP"
+          IP_LIST+=("$IP")
+        done < "$OPTARG"
+        ;;
+      c)
+        [ -z "$COLOR_SET" ] || die 'Color option already set'
+        COLOR=always
+        COLOR_SET=1
+        ;;
+      C)
+        [ -z "$COLOR_SET" ] || die 'Color option already set'
+        COLOR=never
+        COLOR_SET=1
+        ;;
+      N)
+        [ -z "$NS_SET" ] || die 'nameserver option already set'
+        NAMESERVER=
+        NS_SET=1
+        ;;
+      n)
+        [ -z "$NS_SET" ] || die 'nameserver option already set'
+        NAMESERVER="$OPTARG"
+        NS_SET=1
+        ;;
+      v)
+        printf '%s\n' "$VERSION"
+        ;;
+      \?)
+        help
+        ;;
+      :)
+        echo >&2 "Error: -$OPTARG requires an argument"
+        echo >&2
+        help
+        ;;
+    esac
+  done
+
+  if [ "${#IP_LIST[@]}" = 0 ]; then
+    echo >&2 'Error: Must specify one or more -i IP or -f FILE options'
+    echo >&2
+    help
+  fi
+}
+
+set_colors() {
+  if [ "$COLOR" = always ] || [[ "$COLOR" = auto && -t 1 ]]; then
+    RED='\e[31;1m'
+    GREEN='\e[32;1m'
+    YELLOW='\e[33;1m'
+    BLUE='\e[34;1m'
+    RESET='\e[0m'
+  else
+    RED=
+    GREEN=
+    YELLOW=
+    BLUE=
+    RESET=
+  fi
+}
+
+check_all_ips() {
+  local IP
+  for IP in "$@"; do
+    check_ip "$IP"
+  done
+}
+
+######################################################### main #################################################################
+
+parse_args "$@"
+set_colors
+check_all_ips "${IP_LIST[@]}"
+
 ##################################################### end of script ############################################################
