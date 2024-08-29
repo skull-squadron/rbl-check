@@ -222,7 +222,7 @@ assert_valid_ip4_address() {
   local IP=$1
   local IFS=.
   local N
-  set -- "$1"
+  set -- $1
   for N in "$1" "$2" "$3" "$4"; do
     if [[ "$N" -lt 0 || "$N" -gt 255 ]]; then
       echo >&2 "$IP is not an valid IPv4 adddress"
