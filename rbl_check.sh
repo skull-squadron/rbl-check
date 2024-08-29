@@ -26,7 +26,6 @@ RBL_DOMAINS=(
   all.spamrats.com
   asn.routeviews.org
   aspath.routeviews.org
-  aspews.ext.sorbs.net
   b.barracudacentral.org
   backscatter.spameatingmonkey.net
   bad.psky.me
@@ -46,7 +45,6 @@ RBL_DOMAINS=(
   bl.suomispam.net
   blackholes.mail-abuse.org
   blacklist.sci.kun.nl
-  block.dnsbl.sorbs.net
   bsb.spamlookup.net
   cbl.abuseat.org
   ccess.redhawk.org
@@ -64,7 +62,6 @@ RBL_DOMAINS=(
   dnsbl.net.ua
   dnsbl.rv-soft.info
   dnsbl.rymsho.ru
-  dnsbl.sorbs.net
   dnsbl.spam-champuru.livedoor.com
   dnsbl.tornevall.org
   dnsbl.webequipped.com
@@ -76,7 +73,6 @@ RBL_DOMAINS=(
   dsn.rfc-ignorant.org
   dyna.spamrats.com
   dynip.rothen.com
-  escalations.dnsbl.sorbs.net
   eswlrev.dnsbl.rediris.es
   feb.spamlab.com
   fnrbl.fast.net
@@ -98,10 +94,6 @@ RBL_DOMAINS=(
   ispmx.pofon.foobar.hu
   ix.dnsbl.manitu.net
   korea.services.net
-  l1.bbfh.ext.sorbs.net
-  l2.bbfh.ext.sorbs.net
-  l3.bbfh.ext.sorbs.net
-  l4.bbfh.ext.sorbs.net
   list.bbfh.org
   list.blogspambl.com
   list.dnswl.org
@@ -112,17 +104,13 @@ RBL_DOMAINS=(
   netbl.spameatingmonkey.net
   netblock.pedantic.org
   netscan.rbl.blockedservers.com
-  new.spam.dnsbl.sorbs.net
   nobl.junkemailfilter.com
   noptr.spamrats.com
-  old.spam.dnsbl.sorbs.net
   opm.tornevall.org
   orvedb.aupads.org
   phishing.rbl.msrbl.net
   plus.bondedsender.org
   pofon.foobar.hu
-  problems.dnsbl.sorbs.net
-  proxies.dnsbl.sorbs.net
   psbl.surriel.com
   query.bondedsender.org
   rbl-plus.mail-abuse.org
@@ -138,9 +126,7 @@ RBL_DOMAINS=(
   rbl.suresupport.com
   rbl.talkactive.net
   rbl2.triumf.ca
-  recent.spam.dnsbl.sorbs.net
   relays.bl.kundenserver.de
-  relays.dnsbl.sorbs.net
   relays.mail-abuse.org
   relays.nether.net
   rep.mailspike.net
@@ -148,7 +134,6 @@ RBL_DOMAINS=(
   rwl.choon.net
   sa-accredit.habeas.com
   sa.senderbase.org
-  safe.dnsbl.sorbs.net
   sbl-xbl.spamhaus.org
   sbl.nszones.com
   score.senderscore.com
