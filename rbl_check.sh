@@ -14,8 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-)
-domains=(
+RBL_DOMAINS=(
   0spam-killlist.fusionzero.com
   0spam.fusionzero.com
   0spamtrust.fusionzero.com
@@ -190,76 +189,100 @@ domains=(
   z.mailspike.net
 )
 
-Version="1.0.1"
-#black list check help func
-Help() {
-    printf "help\n"
-    printf "[i ----> ip to check for blacklist]\n"
-    printf "[f ----> file with list of ip to check]\n"
-    printf "[v ----> version]\n"
-    printf "[m ----> send check result via email]\n"
-    printf "[h ----> help]\n"
+VERSION='1.0.1'
+IP_LIST=()
+
+if [[ -t 1 && "$COLOR" != none ]] || [ "$COLOR" = always ]; then
+  RED='\e[31;1m'
+  GREEN='\e[32;1m'
+  YELLOW='\e[33;1m'
+  RESET='\e[0m'
+else
+  RED=
+  GREEN=
+  YELLOW=
+  RESET=
+fi
+
+help() {
+  cat <<HELP
+Usage: $(basename "$0") [OPTION]...
+
+Options
+  -i IP      check IP in blacklists
+  -f FILE    use file as list of IPs to check
+  -v         print version
+  -h         print this help
+  
+HELP
+  exit 1
 }
 
-[ -z "$1" ] && Help && exit 1
-while getopts :i:f:v  FLAG; do
-  case $FLAG in
+assert_valid_ip4_address() {
+  local IP=$1
+  local IFS=.
+  local N
+  set -- "$1"
+  for N in "$1" "$2" "$3" "$4"; do
+    if [[ "$N" -lt 0 || "$N" -gt 255 ]]; then
+      echo >&2 "$IP is not an valid IPv4 adddress"
+      exit 1
+    fi
+  done
+}
+
+check_ip() {
+  local IP=$1
+  local STATUS=0
+  local RBL_DOMAIN OUTPUT
+  for RBL_DOMAIN in "${RBL_DOMAINS[@]}"; do
+    echo -en "${YELLOW}Checking IP $IP in RBL $RBL_DOMAIN ...$RESET                                    \r"
+    OUTPUT=($(dig +short "$(tac -s. <<< "$IP.")${RBL_DOMAIN}"))
+    if [[ -n "$OUTPUT" ]]; then
+      echo -e "${RED}IP $IP is blacklisted in RBL $RBL_DOMAIN $RESET status code ${OUTPUT[*]}"
+      STATUS+=1
+    fi
+  done
+  if [ "$STATUS" = 0 ]; then
+    echo -e "${GREEN}IP $IP was not found on any RBL${RESET}                                 "
+  else
+    echo -e "${RED}IP $IP is blocked due to inclusion in $STATUS RBL(s)${RESET}                 "
+  fi
+}
+
+[ -z "$1" ] && help
+while getopts :i:f:v FLAG; do
+  case "$FLAG" in
     i)
       OPTERR=0
-      if [[ "$OPTARG" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]];then
-          IP_LIST=( "$OPTARG" )
-      else
-          echo "Enter the valid ip address.."
-          exit 1
-      fi
+      assert_valid_ip4_address "$OPTARG"
+      IP_LIST+=("$OPTARG")
       ;;
     f)
-      if [ -f "$OPTARG" ]; then
-         IP_LIST=()
-         while read -r ips; do
-           if [[ "$ips" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              IP_LIST+=("$ips")
-           else
-              echo "$ips is not an valid ip adddress."
-              exit 1
-           fi
-         done < "$OPTARG"
-      else
-          echo "$OPTARG No such file or Directory"
-          exit 1
+      if [ ! -r "$OPTARG" ]; then
+        echo "Error: $OPTARG file not found or unreadable"
+        exit 1
       fi
-     ;;
+      while read -r IP; do
+        assert_valid_ip4_address "$IP"
+        IP_LIST+=("$IP")
+      done < "$OPTARG"
+      ;;
     v)
-       printf "%s\n" "${Version}"
+      printf '%s\n' "$VERSION"
       ;;
     \?)
-      Help
-      exit 1
+      help
       ;;
     :)
-      echo "Error: -${OPTARG} requires an argument."
-      Help
-      exit 1
+      echo "Error: -$OPTARG requires an argument."
+      help
       ;;
   esac
 done
 
-
 # ip check again rbl..
-for IP in ${IP_LIST[*]}; do
-  #////////////////////////////////////////////////////
-  revv=$(echo "$IP"| awk -F "." '{print $4"."$3"."$2"."$1}')
-  status=0
-  #/////////////////////////////////////////////////////
-  for domain in ${domains[*]}; do
-      echo -en "\e[32m \e[1mChecking IP $IP in RBL ${domain}...              \e[0m\r"
-      ipcheck=($(dig +short "$revv.${domain}"))
-      if [[ -n "$ipcheck" ]]; then
-          echo -e "\e[1m\e[31mIP $IP is Blacklisted in ${domain} \e[0m" status code "${ipcheck[*]}"
-          status+=1
-      fi
-  done
-  [[ $status -ne 0 ]] && echo -e "\e[32m\e[1mIP $IP is Not Blacklisted in RBL.... \e[0m"
+for IP in "${IP_LIST[@]}"; do
+  check_ip "$IP"
 done
-#//////////////////////////////////////////////////////////////////////////
 ##################################################### end of script ############################################################
