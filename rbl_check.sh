@@ -56,7 +56,6 @@ RBL_DOMAINS=(
   dnsbl-2.uceprotect.net
   dnsbl-3.uceprotect.net
   dnsbl.cobion.com
-  dnsbl.inps.de
   dnsbl.justspam.org
   dnsbl.kempt.net
   dnsbl.net.ua
@@ -68,7 +67,6 @@ RBL_DOMAINS=(
   dnsbl.zapbl.net
   dnsblchile.org
   dnsrbl.swinog.ch
-  dnswl.inps.de
   drone.abuse.ch
   dsn.rfc-ignorant.org
   dyna.spamrats.com
