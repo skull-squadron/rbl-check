@@ -45,7 +45,6 @@ RBL_DOMAINS=(
   bl.suomispam.net
   blackholes.mail-abuse.org
   blacklist.sci.kun.nl
-  bsb.spamlookup.net
   cbl.abuseat.org
   ccess.redhawk.org
   combined.rbl.msrbl.net
