@@ -238,7 +238,7 @@ check_ip() {
   for RBL_DOMAIN in "${RBL_DOMAINS[@]}"; do
     echo -en "${YELLOW}Checking IP $IP in RBL $RBL_DOMAIN ...$RESET                                    \r"
     OUTPUT=($(dig +short "$(tac -s. <<< "$IP.")${RBL_DOMAIN}"))
-    if [[ -n "$OUTPUT" ]]; then
+    if [[ -n "${OUTPUT[*]}" && ! "${OUTPUT[*]}" ~= *connection timed out* ]]; then
       echo -e "${RED}IP $IP is blacklisted in RBL $RBL_DOMAIN $RESET status code ${OUTPUT[*]}"
       STATUS+=1
     fi
